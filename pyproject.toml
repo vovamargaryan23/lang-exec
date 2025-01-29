@@ -5,7 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "Vladimir Margaryan", email = "v.margaryan204@gmail.com"},
 ]
-dependencies = ["fastapi[uvicorn]>=0.115.7", "docker>=7.1.0"]
+dependencies = ["fastapi[uvicorn]>=0.115.7", "docker>=7.1.0", "uvicorn[standard]>=0.34.0", "aiofiles>=24.1.0"]
 requires-python = "==3.10.*"
 readme = "README.md"
 license = {text = "MIT"}
@@ -14,4 +14,5 @@ license = {text = "MIT"}
 distribution = false
 
 [tool.pdm.scripts]
-app = {cmd="python3 ./src/main.py"}
+app = {cmd="uvicorn src.main:app"}
+_.env_file = ".env"
