@@ -1,0 +1,33 @@
+x-dockerfiles-dir:
+  &dockerfiles-dir
+  context: dockerfiles/
+
+services:
+  # java-executor:
+  #   build:
+  #     <<: *dockerfiles-dir
+  #     dockerfile: java.Dockerfile
+  #   networks:
+  #     - lang-exec
+
+  python-executor:
+    build:
+      <<: *dockerfiles-dir
+      dockerfile: python.Dockerfile
+    networks:
+      - lang-exec
+      
+  application:
+    build: .
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - python-executor
+    networks:
+      - lang-exec
+
+networks:
+  lang-exec:
+    driver: bridge
