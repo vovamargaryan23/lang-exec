@@ -1,20 +1,23 @@
 import json
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
+from src.dependencies import get_executor_service
 from src.schemas import CodeExecRequestData
-from src.services import CodeExecutorService
+from src.services.code_executor import CodeExecutorService
 
 
 code_exec_router = APIRouter()
-CODE_EXECUTOR_SERVICE = CodeExecutorService()
 
 
 @code_exec_router.post("/execute")
-async def execute_code(data: CodeExecRequestData) -> StreamingResponse:
-    # Validate language before StreamingResponse so HTTPException propagates correctly.
-    stream = CODE_EXECUTOR_SERVICE.get_stream(data)
+async def execute_code(
+    data: CodeExecRequestData,
+    service: Annotated[CodeExecutorService, Depends(get_executor_service)],
+) -> StreamingResponse:
+    stream = service.get_stream(data)
 
     async def event_generator():
         async for chunk in stream:

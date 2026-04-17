@@ -22,6 +22,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./tmp/code:/media/code"
+      - "./logs:/app/logs"
     environment:
       - CODE_VOLUME_HOST_PATH=${PWD}/tmp/code
     ports:
@@ -30,6 +31,12 @@ services:
       - python-executor
     networks:
       - lang-exec
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
   lang-exec:

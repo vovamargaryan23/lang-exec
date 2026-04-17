@@ -173,3 +173,7 @@ cython_debug/
 # Temporary code files written during execution
 tmp/code/*
 !tmp/code/.gitkeep
+
+# Log files
+logs/*
+!logs/.gitkeep

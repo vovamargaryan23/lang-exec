@@ -16,3 +16,8 @@ distribution = false
 [tool.pdm.scripts]
 app = {cmd="uvicorn src.main:app"}
 _.env_file = ".env"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]

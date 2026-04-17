@@ -1,19 +1,42 @@
-import os
 from pathlib import Path
 
-DOCKER_SOCK_PATH: str = "unix://var/run/docker.sock"
+from pydantic import computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Executor container resource limits
-EXEC_CPU_LIMIT: int = 1      # CPUs
-EXEC_MEM_LIMIT: int = 128    # MB
-EXEC_TIMEOUT: int = 10       # seconds before container is killed
-EXEC_PIDS_LIMIT: int = 64    # max processes/threads inside container
 
-# Path inside the application container where code files are written
-VOLUME_PATH: Path = Path("/media/code")
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
-# Host-side absolute path of the code volume — used when mounting into executor
-# containers spawned via the Docker socket. Set via env in docker-compose.
-HOST_VOLUME_PATH: str = os.environ.get("CODE_VOLUME_HOST_PATH", str(VOLUME_PATH))
+    docker_sock_path: str = "unix:///var/run/docker.sock"
 
-NETWORK_NAME: str = ""
+    exec_cpu_limit: int = 1
+    exec_mem_limit: int = 128
+    exec_timeout: int = 10
+    exec_pids_limit: int = 64
+    exec_pool_size: int = 3
+    exec_pool_overflow: int = 5
+
+    volume_path: Path = Path("/media/code")
+    code_volume_host_path: str = ""
+
+    @computed_field
+    @property
+    def host_volume_path(self) -> str:
+        return self.code_volume_host_path or str(self.volume_path)
+
+    @computed_field
+    @property
+    def exec_mem_limit_bytes(self) -> int:
+        return self.exec_mem_limit * 1024 * 1024
+
+    @computed_field
+    @property
+    def exec_cpu_limit_nanos(self) -> int:
+        return self.exec_cpu_limit * 10 ** 9
+
+
+settings = Settings()
