@@ -16,11 +16,14 @@ services:
       dockerfile: python.Dockerfile
     networks:
       - lang-exec
-      
+
   application:
     build: .
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./tmp/code:/media/code"
+    environment:
+      - CODE_VOLUME_HOST_PATH=${PWD}/tmp/code
     ports:
       - "8000:8000"
     depends_on:

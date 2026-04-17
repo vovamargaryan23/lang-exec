@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Temporary code files written during execution
+tmp/code/*
+!tmp/code/.gitkeep

@@ -1,8 +1,7 @@
-import asyncio
-import aiofiles
+from typing import AsyncGenerator
 
+import aiofiles
 import aiofiles.os
-import aiofiles.ospath
 
 from .base_strategy import BaseStrategy
 from src.internal.languages import LangEnum
@@ -11,21 +10,21 @@ from src.internal.settings import VOLUME_PATH
 
 
 class PythonStrategy(BaseStrategy):
-    def _get_self_enum(self):
+    def _get_self_enum(self) -> LangEnum:
         return LangEnum.PYTHON
-    
-    async def execute(self, code: str, exec_params: str):
+
+    async def stream_execute(self, code: str, exec_params: str) -> AsyncGenerator[dict, None]:
         file_name = self._generate_file_name() + ".py"
         full_file_path = VOLUME_PATH / file_name
-        
+
         async with aiofiles.open(full_file_path, mode="w+") as f:
             await f.write(code)
-        
-        stdout, stderr, return_code = await asyncio.to_thread(self._container_manager.run_container, LANGUAGE_TO_IMAGE_NAME_MAP[self._lang_enum], full_file_path)
-        
-        # await aiofiles.os.remove(full_file_path)
-        return stdout, stderr, return_code
 
-        
-        
-        
+        try:
+            async for chunk in self._container_manager.stream_container(
+                LANGUAGE_TO_IMAGE_NAME_MAP[self._lang_enum],
+                str(full_file_path)
+            ):
+                yield chunk
+        finally:
+            await aiofiles.os.remove(full_file_path)

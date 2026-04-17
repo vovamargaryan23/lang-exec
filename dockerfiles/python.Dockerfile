@@ -1,3 +1,9 @@
 FROM python:3.10-alpine
 
-ENTRYPOINT ["python3"]
+ENV PYTHONUNBUFFERED=1
+
+RUN addgroup -S executor && adduser -S executor -G executor
+
+USER executor
+
+ENTRYPOINT ["python3", "-B"]
