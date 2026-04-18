@@ -3,6 +3,16 @@ x-dockerfiles-dir:
   context: dockerfiles/
 
 services:
+  redis:
+    image: redis:7-alpine
+    networks:
+      - lang-exec
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   python-executor:
     build:
       <<: *dockerfiles-dir
@@ -25,11 +35,13 @@ services:
       - "./logs:/app/logs"
     environment:
       - CODE_VOLUME_HOST_PATH=${PWD}/tmp/code
+      - REDIS_URL=redis://redis:6379
     ports:
       - "8000:8000"
     depends_on:
       - python-executor
       - java-executor
+      - redis
     networks:
       - lang-exec
     healthcheck:

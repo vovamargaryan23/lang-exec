@@ -1,6 +1,7 @@
+import logging
 import logging.config
 
-LOGGING_CONFIG = {
+_CONSOLE_ONLY_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
@@ -15,12 +16,23 @@ LOGGING_CONFIG = {
             "formatter": "standard",
             "stream": "ext://sys.stdout",
         },
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["console"],
+    },
+}
+
+_FILE_CONFIG = {
+    **_CONSOLE_ONLY_CONFIG,
+    "handlers": {
+        **_CONSOLE_ONLY_CONFIG["handlers"],
         "file": {
-            "class": "logging.handlers.RotatingFileHandler",
+            # WatchedFileHandler re-opens the file after each rotation,
+            # making it safe to use across multiple worker processes.
+            "class": "logging.handlers.WatchedFileHandler",
             "formatter": "standard",
             "filename": "logs/app.log",
-            "maxBytes": 10 * 1024 * 1024,  # 10 MB
-            "backupCount": 5,
             "encoding": "utf-8",
         },
     },
@@ -33,5 +45,8 @@ LOGGING_CONFIG = {
 
 def setup_logging() -> None:
     import os
-    os.makedirs("logs", exist_ok=True)
-    logging.config.dictConfig(LOGGING_CONFIG)
+    try:
+        os.makedirs("logs", exist_ok=True)
+        logging.config.dictConfig(_FILE_CONFIG)
+    except Exception:
+        logging.config.dictConfig(_CONSOLE_ONLY_CONFIG)

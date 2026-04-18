@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     exec_pids_limit: int = 64
     exec_pool_size: int = 3
     exec_pool_overflow: int = 5
+    exec_rate_limit: str = "30/minute"
+    redis_url: str | None = None
 
     volume_path: Path = Path("/media/code")
     code_volume_host_path: str = ""
