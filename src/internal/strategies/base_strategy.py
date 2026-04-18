@@ -7,6 +7,7 @@ import aiofiles
 import aiofiles.os
 
 from src.internal.container_manager import ActiveExecution, ContainerManager
+from src.internal.settings import settings
 
 
 class PreparedExecution(ABC):
@@ -37,12 +38,16 @@ class BaseStrategy(ABC):
     def __init__(self, container_manager: ContainerManager) -> None:
         self._container_manager = container_manager
 
+    @property
+    @abstractmethod
+    def file_extension(self) -> str: ...
+
     def _generate_file_name(self) -> str:
         return secrets.token_hex(8)
 
-    @abstractmethod
     async def prepare_execution(self, code: str) -> PreparedExecution:
-        ...
+        file_path = settings.volume_path / (self._generate_file_name() + self.file_extension)
+        return await self._write_and_prepare(code, file_path)
 
     async def _write_and_prepare(self, code: str, file_path: Path) -> PreparedExecution:
         async with aiofiles.open(file_path, mode="w") as f:

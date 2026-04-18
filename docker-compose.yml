@@ -3,6 +3,18 @@ x-dockerfiles-dir:
   context: dockerfiles/
 
 services:
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CONTAINERS: 1
+      EXEC: 1
+      IMAGES: 1
+      POST: 1
+    networks:
+      - docker-proxy
+
   redis:
     image: redis:7-alpine
     networks:
@@ -30,20 +42,22 @@ services:
   application:
     build: .
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
       - "./tmp/code:/media/code"
       - "./logs:/app/logs"
     environment:
       - CODE_VOLUME_HOST_PATH=${PWD}/tmp/code
       - REDIS_URL=redis://redis:6379
+      - DOCKER_SOCK_PATH=tcp://docker-proxy:2375
     ports:
       - "8000:8000"
     depends_on:
+      - docker-proxy
       - python-executor
       - java-executor
       - redis
     networks:
       - lang-exec
+      - docker-proxy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8000/health"]
       interval: 30s
@@ -53,4 +67,6 @@ services:
 
 networks:
   lang-exec:
+    driver: bridge
+  docker-proxy:
     driver: bridge

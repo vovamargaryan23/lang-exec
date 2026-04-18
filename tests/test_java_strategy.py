@@ -24,7 +24,7 @@ def strategy(mock_manager) -> JavaStrategy:
 def mock_settings(tmp_path, monkeypatch):
     settings = MagicMock()
     settings.volume_path = tmp_path
-    monkeypatch.setattr("src.internal.strategies.java_strategy.settings", settings)
+    monkeypatch.setattr("src.internal.strategies.base_strategy.settings", settings)
     return settings
 
 
