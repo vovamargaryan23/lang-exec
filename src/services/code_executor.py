@@ -1,8 +1,8 @@
-from typing import AsyncGenerator, Dict
+from typing import Dict
 
 from src.exceptions import LanguageNotFoundException
 from src.internal.languages import LangEnum
-from src.internal.strategies import BaseStrategy
+from src.internal.strategies.base_strategy import BaseStrategy, PreparedExecution
 from src.schemas import CodeExecRequestData
 
 
@@ -10,9 +10,9 @@ class CodeExecutorService:
     def __init__(self, strategies: Dict[LangEnum, BaseStrategy]) -> None:
         self._strategies = strategies
 
-    def get_stream(self, data: CodeExecRequestData) -> AsyncGenerator[dict, None]:
+    async def prepare_stream(self, data: CodeExecRequestData) -> PreparedExecution:
         strategy = self._get_strategy(data.language)
-        return strategy.stream_execute(data.code)
+        return await strategy.prepare_execution(data.code)
 
     def _get_strategy(self, language: str) -> BaseStrategy:
         try:

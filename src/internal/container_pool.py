@@ -19,7 +19,18 @@ class ContainerPool:
         self._image = image
         self._exec_prefix: list[str] = []
         self._idle: asyncio.Queue = asyncio.Queue(maxsize=settings.exec_pool_size)
-        self._semaphore = asyncio.Semaphore(settings.exec_pool_size + settings.exec_pool_overflow)
+        self._max_concurrent: int = settings.exec_pool_size + settings.exec_pool_overflow
+        self._semaphore = asyncio.Semaphore(self._max_concurrent)
+
+    @property
+    def stats(self) -> dict:
+        in_use = self._max_concurrent - self._semaphore._value
+        return {
+            "idle": self._idle.qsize(),
+            "capacity": self._idle.maxsize,
+            "max_concurrent": self._max_concurrent,
+            "in_use": max(0, in_use),
+        }
 
     def build_exec_cmd(self, file_path: str) -> list[str]:
         return self._exec_prefix + [file_path]

@@ -17,10 +17,11 @@ async def execute_code(
     data: CodeExecRequestData,
     service: Annotated[CodeExecutorService, Depends(get_executor_service)],
 ) -> StreamingResponse:
-    stream = service.get_stream(data)
+    # Must raise before StreamingResponse is returned — once streaming starts the status code is committed.
+    execution = await service.prepare_stream(data)
 
     async def event_generator():
-        async for chunk in stream:
+        async for chunk in execution.stream():
             yield f"{json.dumps(chunk)}\n"
 
     return StreamingResponse(event_generator(), media_type="application/x-ndjson")

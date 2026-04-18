@@ -1,9 +1,7 @@
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
-from fastapi import status
 
-from src.exceptions import LanguageNotFoundException
 
-async def lang_not_found_exception_handler(req: Request, exception: LanguageNotFoundException):
-    return JSONResponse(content={"detail":exception.detail},
-                        status_code=exception.status_code)
+async def http_exception_handler(req: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(content={"detail": exc.detail}, status_code=exc.status_code)

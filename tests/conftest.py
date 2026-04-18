@@ -5,19 +5,22 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
-from src.exception_handlers import lang_not_found_exception_handler
-from src.exceptions import LanguageNotFoundException
+from src.exception_handlers import http_exception_handler
+from src.exceptions import DockerInfrastructureError, LanguageNotFoundException
 from src.internal.container_pool import ContainerPool
+from src.internal.languages import LangEnum
 from src.routers import code_exec_router, health_router
 from src.services.code_executor import CodeExecutorService
 
 
-def make_test_app(service: CodeExecutorService) -> FastAPI:
+def make_test_app(service: CodeExecutorService, pools: dict | None = None) -> FastAPI:
     app = FastAPI()
     app.include_router(code_exec_router)
     app.include_router(health_router)
-    app.add_exception_handler(LanguageNotFoundException, lang_not_found_exception_handler)
+    app.add_exception_handler(LanguageNotFoundException, http_exception_handler)
+    app.add_exception_handler(DockerInfrastructureError, http_exception_handler)
     app.state.executor_service = service
+    app.state.pools = pools or {}
     return app
 
 
@@ -49,8 +52,23 @@ def mock_service() -> MagicMock:
 
 
 @pytest.fixture
-def test_app(mock_service: MagicMock) -> FastAPI:
-    return make_test_app(mock_service)
+def mock_pools() -> dict:
+    pool = MagicMock(spec=ContainerPool)
+    pool.stats = {"idle": 2, "capacity": 3, "max_concurrent": 8, "in_use": 1}
+    return {LangEnum.PYTHON: pool}
+
+
+@pytest.fixture
+def test_app(mock_service: MagicMock, mock_pools: dict) -> FastAPI:
+    return make_test_app(mock_service, mock_pools)
+
+
+@pytest.fixture
+async def http_client(test_app: FastAPI) -> httpx.AsyncClient:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=test_app), base_url="http://test"
+    ) as client:
+        yield client
 
 
 @pytest.fixture
@@ -82,11 +100,3 @@ def pool_settings(monkeypatch):
 @pytest.fixture
 def pool(mock_docker: MagicMock, pool_settings: MagicMock) -> ContainerPool:
     return ContainerPool(docker=mock_docker, image="test-image:latest")
-
-
-@pytest.fixture
-async def http_client(test_app: FastAPI) -> httpx.AsyncClient:
-    async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=test_app), base_url="http://test"
-    ) as client:
-        yield client

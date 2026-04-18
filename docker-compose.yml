@@ -3,17 +3,17 @@ x-dockerfiles-dir:
   context: dockerfiles/
 
 services:
-  # java-executor:
-  #   build:
-  #     <<: *dockerfiles-dir
-  #     dockerfile: java.Dockerfile
-  #   networks:
-  #     - lang-exec
-
   python-executor:
     build:
       <<: *dockerfiles-dir
       dockerfile: python.Dockerfile
+    networks:
+      - lang-exec
+
+  java-executor:
+    build:
+      <<: *dockerfiles-dir
+      dockerfile: java.Dockerfile
     networks:
       - lang-exec
 
@@ -29,6 +29,7 @@ services:
       - "8000:8000"
     depends_on:
       - python-executor
+      - java-executor
     networks:
       - lang-exec
     healthcheck:

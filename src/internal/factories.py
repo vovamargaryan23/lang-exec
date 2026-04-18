@@ -9,12 +9,14 @@ from src.internal.container_pool import ContainerPool
 from src.internal.languages import LangEnum
 from src.internal.mappers import LANGUAGE_TO_IMAGE_NAME_MAP
 from src.internal.strategies.base_strategy import BaseStrategy
+from src.internal.strategies.java_strategy import JavaStrategy
 from src.internal.strategies.python_strategy import PythonStrategy
 
 logger = logging.getLogger(__name__)
 
 LANGUAGE_TO_STRATEGY_CLASS: Dict[LangEnum, Type[BaseStrategy]] = {
     LangEnum.PYTHON: PythonStrategy,
+    LangEnum.JAVA: JavaStrategy,
 }
 
 

@@ -258,6 +258,37 @@ class TestShutdown:
         await pool.shutdown()  # must not raise
 
 
+class TestStats:
+    def test_reports_idle_count(self, pool):
+        c = make_mock_container()
+        pool._idle.put_nowait(c)
+        assert pool.stats["idle"] == 1
+
+    def test_reports_capacity(self, pool, pool_settings):
+        assert pool.stats["capacity"] == pool_settings.exec_pool_size
+
+    def test_reports_max_concurrent(self, pool, pool_settings):
+        expected = pool_settings.exec_pool_size + pool_settings.exec_pool_overflow
+        assert pool.stats["max_concurrent"] == expected
+
+    @pytest.mark.asyncio
+    async def test_in_use_increases_after_acquire(self, pool, pool_settings):
+        before = pool.stats["in_use"]
+        await pool.acquire()
+        assert pool.stats["in_use"] == before + 1
+
+    @pytest.mark.asyncio
+    async def test_in_use_decreases_after_release(self, pool, pool_settings):
+        container = await pool.acquire()
+        await pool.release(container)
+        await asyncio.sleep(0)
+        assert pool.stats["in_use"] == 0
+
+    def test_in_use_never_negative(self, pool):
+        # Semaphore at full value → in_use should be 0, not negative
+        assert pool.stats["in_use"] == 0
+
+
 class TestBuildExecCmd:
     def test_combines_prefix_with_file_path(self, pool):
         pool._exec_prefix = ["python3", "-u"]
