@@ -17,7 +17,7 @@ async def execute_code(
     data: CodeExecRequestData,
     service: Annotated[CodeExecutorService, Depends(get_executor_service)],
 ) -> StreamingResponse:
-    # Must raise before StreamingResponse is returned — once streaming starts the status code is committed.
+    # Must raise before StreamingResponse is returned - once streaming starts the status code is committed.
     execution = await service.prepare_stream(data)
 
     async def event_generator():

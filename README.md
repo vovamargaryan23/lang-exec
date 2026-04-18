@@ -1,6 +1,6 @@
 # LangExec
 
-A backend platform for executing code in multiple programming languages inside fully isolated Docker containers — no local language runtimes required.
+A backend platform for executing code in multiple programming languages inside fully isolated Docker containers - no local language runtimes required.
 
 ## Supported Languages
 
@@ -28,7 +28,7 @@ A backend platform for executing code in multiple programming languages inside f
 }
 ```
 
-**Response** — `application/x-ndjson`
+**Response** - `application/x-ndjson`
 
 One JSON object per line. The stream always ends with either an `exit` or `timeout` event.
 
@@ -63,12 +63,12 @@ Returns application status and per-language pool statistics.
 
 ## Container Pool
 
-Each language has a dedicated pool of pre-warmed containers. Containers start before the first request arrives, eliminating runtime startup latency. After each execution the used container is discarded and a fresh one is created asynchronously in the background — never reused.
+Each language has a dedicated pool of pre-warmed containers. Containers start before the first request arrives, eliminating runtime startup latency. After each execution the used container is discarded and a fresh one is created asynchronously in the background - never reused.
 
 Two settings control concurrency per pool:
 
-- `EXEC_POOL_SIZE` — number of pre-warmed idle containers (default `3`)
-- `EXEC_POOL_OVERFLOW` — additional containers that can be created on demand for burst traffic (default `5`)
+- `EXEC_POOL_SIZE` - number of pre-warmed idle containers (default `3`)
+- `EXEC_POOL_OVERFLOW` - additional containers that can be created on demand for burst traffic (default `5`)
 
 The hard concurrency limit per pool is `EXEC_POOL_SIZE + EXEC_POOL_OVERFLOW`.
 
@@ -76,14 +76,14 @@ The hard concurrency limit per pool is `EXEC_POOL_SIZE + EXEC_POOL_OVERFLOW`.
 
 Executor containers are maximally restricted at runtime:
 
-- **No network** — containers cannot make any outbound or inbound connections.
-- **Read-only filesystem** — root filesystem is mounted read-only; only `/tmp` is writable (via `tmpfs`, `noexec`, `nosuid`).
-- **Non-root user** — code runs as an unprivileged `executor` user inside the container.
-- **Dropped capabilities** — all Linux capabilities are dropped.
-- **No privilege escalation** — `no-new-privileges` security option is enforced.
-- **Resource limits** — CPU, memory (no swap beyond RAM limit), and PID count are all capped.
-- **Execution timeout** — containers that exceed the time limit are killed with SIGKILL and the client receives a `{"type": "timeout"}` event.
-- **Input validation** — code payload is capped at 64 KB.
+- **No network** - containers cannot make any outbound or inbound connections.
+- **Read-only filesystem** - root filesystem is mounted read-only; only `/tmp` is writable (via `tmpfs`, `noexec`, `nosuid`).
+- **Non-root user** - code runs as an unprivileged `executor` user inside the container.
+- **Dropped capabilities** - all Linux capabilities are dropped.
+- **No privilege escalation** - `no-new-privileges` security option is enforced.
+- **Resource limits** - CPU, memory (no swap beyond RAM limit), and PID count are all capped.
+- **Execution timeout** - containers that exceed the time limit are killed with SIGKILL and the client receives a `{"type": "timeout"}` event.
+- **Input validation** - code payload is capped at 64 KB.
 
 ## Build & Run
 
